@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSVforge — CSV to JSON Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg:        #0b0e14;
+    --surface:   #131720;
+    --card:      #181e2b;
+    --border:    #252d40;
+    --accent:    #4f8aff;
+    --accent2:   #a78bfa;
+    --green:     #22c55e;
+    --red:       #f87171;
+    --yellow:    #fbbf24;
+    --text:      #e8ecf4;
+    --muted:     #6b7a99;
+    --font-disp: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius:    12px;
+    --radius-sm: 8px;
+    --shadow:    0 4px 24px rgba(0,0,0,0.5);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo span { color: var(--accent); }
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(79,138,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(79,138,255,0.25);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── LAYOUT ── */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── ADS ── */
+  .ad-banner {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .ad-banner ins { display: block; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .hero h1 {
+    font-family: var(--font-disp);
+    font-size: clamp(28px, 5vw, 46px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* ── STEPS ── */
+  .steps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.3s;
+  }
+  .step.active {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(79,138,255,0.08);
+  }
+  .step.done { color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step.active .step-num { background: var(--accent); color: #fff; }
+  .step.done .step-num { background: var(--green); color: #fff; }
+
+  /* ── DROP ZONE ── */
+  #drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: var(--surface);
+    position: relative;
+    margin-bottom: 24px;
+  }
+  #drop-zone:hover, #drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(79,138,255,0.05);
+  }
+  #drop-zone.drag-over { transform: scale(1.01); }
+  #drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(79,138,255,0.1);
+    border: 2px solid rgba(79,138,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .drop-title {
+    font-family: var(--font-disp);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .drop-sub { color: var(--muted); font-size: 14px; }
+  .drop-sub span {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+  }
+  .file-info {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .file-name {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent);
+    background: rgba(79,138,255,0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .file-size {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── OPTIONS PANEL ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .option-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .option-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .option-label svg { opacity: 0.6; }
+  select, input[type=text] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 9px 12px;
+    outline: none;
+    appearance: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7a99' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .toggle-label { font-size: 14px; color: var(--text); }
+  .toggle {
+    width: 38px; height: 20px;
+    border-radius: 10px;
+    background: var(--border);
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-green {
+    background: rgba(34,197,94,0.12);
+    color: var(--green);
+    border: 1px solid rgba(34,197,94,0.25);
+  }
+  .btn-green:hover { background: rgba(34,197,94,0.2); }
+  .btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn svg { flex-shrink: 0; }
+
+  /* ── ERRORS ── */
+  #error-box {
+    display: none;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .error-title {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--red);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .error-list { list-style: none; }
+  .error-list li {
+    font-size: 13px;
+    color: #fca5a5;
+    padding: 3px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .error-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+  }
+
+  #warning-box {
+    display: none;
+    background: rgba(251,191,36,0.07);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--yellow);
+  }
+
+  /* ── MAPPING TABLE ── */
+  .section-head {
+    font-family: var(--font-disp);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-head small {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: auto;
+    margin-bottom: 28px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead th {
+    background: var(--surface);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr:hover td { background: rgba(79,138,255,0.04); }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .col-orig {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .col-type select {
+    padding: 5px 28px 5px 10px;
+    font-size: 13px;
+    width: auto;
+    min-width: 110px;
+  }
+  .col-rename input {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+  .col-include .toggle { margin: 0 auto; display: block; }
+  .preview-values {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .type-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .type-string  { background: rgba(79,138,255,0.12); color: var(--accent); }
+  .type-number  { background: rgba(167,139,250,0.12); color: var(--accent2); }
+  .type-boolean { background: rgba(34,197,94,0.12); color: var(--green); }
+  .type-date    { background: rgba(251,191,36,0.12); color: var(--yellow); }
+  .type-null    { background: rgba(107,122,153,0.15); color: var(--muted); }
+
+  /* ── DATA PREVIEW ── */
+  .preview-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 8px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  pre {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    overflow: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    max-height: 420px;
+    color: #c8d0e7;
+  }
+  .json-key    { color: var(--accent2); }
+  .json-string { color: #86efac; }
+  .json-number { color: #fbbf24; }
+  .json-bool   { color: #f87171; }
+  .json-null   { color: var(--muted); }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+  }
+  .stat-val {
+    font-family: var(--font-disp);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── DOWNLOAD SECTION ── */
+  .download-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    display: none;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .download-info h3 {
+    font-family: var(--font-disp);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .download-info p { font-size: 13px; color: var(--muted); }
+  .download-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filename-input {
+    width: 240px;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 320px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: rgba(34,197,94,0.4); }
+  #toast.error   { border-color: rgba(248,113,113,0.4); }
+
+  /* ── AD SIDEBAR ── */
+  .ad-sidebar {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .ad-sidebar { display: none; }
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.8s linear infinite; }
+
+  #mapping-section, #preview-section { display: none; }
+  #mapping-section.visible, #preview-section.visible { display: block; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    header { padding: 14px 16px; }
+    .page { padding: 20px 12px 40px; }
+    .btn-row { gap: 8px; }
+    .btn { padding: 9px 16px; font-size: 13px; }
+    .options-grid { grid-template-columns: 1fr 1fr; }
+    pre { font-size: 12px; }
+    .download-section { flex-direction: column; align-items: flex-start; }
+    .filename-input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚙</div>
+    CSV<span>forge</span>
+  </div>
+  <div class="badge">CSV → JSON</div>
+</header>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- TOP AD -->
+  <div class="ad-banner">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Convert CSV to <em>clean JSON</em> — instantly</h1>
+    <p>Drag your CSV, map column types, preview output, and download. No data leaves your browser.</p>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="step-1"><div class="step-num">1</div>Upload CSV</div>
+    <div class="step" id="step-2"><div class="step-num">2</div>Map Columns</div>
+    <div class="step" id="step-3"><div class="step-num">3</div>Preview JSON</div>
+    <div class="step" id="step-4"><div class="step-num">4</div>Download</div>
+  </div>
+
+  <div class="main-grid">
+    <div class="content-col">
+
+      <!-- DROP ZONE -->
+      <div id="drop-zone">
+        <input type="file" id="file-input" accept=".csv,text/csv">
+        <div id="drop-default">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">Drop your CSV file here</div>
+          <div class="drop-sub">or <span>click to browse</span> · Supports .csv files up to 50MB</div>
+        </div>
+        <div class="file-info" id="file-info">
+          <div>✅</div>
+          <div class="file-name" id="file-name-display"></div>
+          <div class="file-size" id="file-size-display"></div>
+        </div>
+      </div>
+
+      <!-- OPTIONS -->
+      <div class="options-grid">
+        <div class="option-card">
+          <div class="option-label">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="4.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.5"/></svg>
+            Delimiter
+          </div>
+          <select id="delimiter">
+            <option value=",">Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="\t">Tab (\t)</option>
+            <option value="|">Pipe (|)</option>
+          </select>
+        </div>
+        <div class="option-card">
+          <div class="option-label">✏️ Output format</div>
+          <select id="output-format">
+            <option value="array">Array of objects</option>
+            <option value="nested">Nested by first column</option>
+            <option value="flat">Flat key-value pairs</option>
+          </select>
+        </div>
+        <div class="option-card">
+          <div class="option-label">🎨 Indent size</div>
+          <select id="indent">
+            <option value="2">2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="0">Minified</option>
+          </select>
+        </div>
+        <div class="option-card">
+          <div class="option-label">⚙️ Options</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="toggle-row" title="Skip rows where all values are empty">
+              <span class="toggle-label" style="font-size:13px">Skip empty rows</span>
+              <div class="toggle on" id="toggle-empty" onclick="this.classList.toggle('on')"></div>
+            </label>
+            <label class="toggle-row" title="Convert numeric strings to numbers">
+              <span class="toggle-label" style="font-size:13px">Auto-detect types</span>
+              <div class="toggle on" id="toggle-types" onclick="this.classList.toggle('on')"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERRORS -->
+      <div id="error-box">
+        <div class="error-title">⛔ Validation errors found</div>
+        <ul class="error-list" id="error-list"></ul>
+      </div>
+      <div id="warning-box"></div>
+
+      <!-- CONVERT BUTTON -->
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-parse" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Parse & Map Columns
+        </button>
+        <button class="btn btn-ghost" id="btn-reset" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1 0 .7-2.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="2,2 2,6 6,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Start Over
+        </button>
+      </div>
+
+      <!-- MAPPING TABLE -->
+      <div id="mapping-section">
+        <div class="section-head">
+          🗂 Column mapping <small>Configure types and key names</small>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Include</th>
+                <th>Original column</th>
+                <th>Rename key (optional)</th>
+                <th>Data type</th>
+                <th>Auto-detected</th>
+                <th>Sample values</th>
+              </tr>
+            </thead>
+            <tbody id="mapping-body"></tbody>
+          </table>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-convert">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5l4 4 4-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 8a6 6 0 0 1-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Generate JSON
+          </button>
+          <button class="btn btn-ghost" id="btn-select-all">Select All</button>
+          <button class="btn btn-ghost" id="btn-deselect-all">Deselect All</button>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div id="preview-section">
+
+        <!-- STATS -->
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <!-- MID AD -->
+        <div class="ad-banner" style="margin-bottom:20px">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+               data-ad-slot="0987654321"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+
+        <!-- DOWNLOAD CARD -->
+        <div class="download-section" id="download-section" style="display:flex">
+          <div class="download-info">
+            <h3>✅ JSON ready <span id="ready-count"></span></h3>
+            <p>Download your converted file</p>
+          </div>
+          <div class="download-actions">
+            <input type="text" id="filename-input" class="filename-input" value="output" placeholder="filename (no extension)">
+            <button class="btn btn-green" id="btn-download">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="12" width="12" height="2" rx="1" fill="currentColor"/></svg>
+              Download .json
+            </button>
+            <button class="btn btn-ghost" id="btn-copy">
+              📋 Copy
+            </button>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="section-head">🔍 Output preview</div>
+        <div class="preview-tabs">
+          <button class="tab-btn active" data-tab="json">JSON</button>
+          <button class="tab-btn" data-tab="table">Table preview</button>
+        </div>
+        <div class="tab-panel active" id="tab-json">
+          <pre id="json-preview"></pre>
+        </div>
+        <div class="tab-panel" id="tab-table">
+          <div class="table-wrap">
+            <table id="table-preview-el">
+              <thead id="table-preview-head"></thead>
+              <tbody id="table-preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-col -->
+
+    <!-- SIDEBAR AD -->
+    <div class="ad-sidebar">
+      <ins class="adsbygoogle"
+           style="display:inline-block;width:160px;height:600px"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1122334455"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+  </div><!-- /main-grid -->
+
+</div><!-- /page -->
+
+<!-- FOOTER -->
+<footer>
+  <span>CSVforge — All processing happens in your browser. Zero uploads.</span>
+  <a href="#">Privacy Policy</a>
+  <a href="#">Terms</a>
+</footer>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ─── STATE ─── */
+let parsedRows = [];
+let headers    = [];
+let jsonOutput = '';
+
+/* ─── DOM REFS ─── */
+const dropZone    = document.getElementById('drop-zone');
+const fileInput   = document.getElementById('file-input');
+const btnParse    = document.getElementById('btn-parse');
+const btnReset    = document.getElementById('btn-reset');
+const btnConvert  = document.getElementById('btn-convert');
+const btnDownload = document.getElementById('btn-download');
+const btnCopy     = document.getElementById('btn-copy');
+const btnSelAll   = document.getElementById('btn-select-all');
+const btnDeselAll = document.getElementById('btn-deselect-all');
+
+/* ─── DRAG & DROP ─── */
+['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); }));
+['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); }));
+dropZone.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) handleFile(f); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+function handleFile(file) {
+  clearErrors();
+  const errors = [];
+  if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv' && file.type !== 'application/vnd.ms-excel') {
+    errors.push('File must be a .csv file. Received: ' + (file.type || 'unknown type'));
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    errors.push('File size exceeds 50MB limit (' + (file.size / 1024 / 1024).toFixed(1) + 'MB).');
+  }
+  if (errors.length) { showErrors(errors); return; }
+
+  document.getElementById('drop-default').style.display = 'none';
+  const fi = document.getElementById('file-info');
+  fi.style.display = 'flex';
+  document.getElementById('file-name-display').textContent = file.name;
+  document.getElementById('file-size-display').textContent = formatBytes(file.size);
+  btnParse.disabled = false;
+  setStep(1);
+
+  // store file reference
+  btnParse._file = file;
+}
+
+/* ─── PARSE ─── */
+btnParse.addEventListener('click', () => {
+  const file = btnParse._file;
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const raw = e.target.result;
+      const delim = document.getElementById('delimiter').value === '\\t' ? '\t' : document.getElementById('delimiter').value;
+      const result = parseCSV(raw, delim);
+      if (result.errors.length) { showErrors(result.errors); return; }
+      if (result.warnings.length) showWarnings(result.warnings);
+      headers    = result.headers;
+      parsedRows = result.rows;
+      buildMappingTable(headers, parsedRows);
+      document.getElementById('mapping-section').classList.add('visible');
+      document.getElementById('mapping-section').classList.add('fade-in');
+      setStep(2);
+      btnParse.style.display = 'none';
+      btnReset.style.display = 'inline-flex';
+      document.getElementById('preview-section').classList.remove('visible');
+      showToast('success', `✅ Parsed ${parsedRows.length} rows, ${headers.length} columns`);
+    } catch (err) {
+      showErrors(['Failed to parse CSV: ' + err.message]);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
+/* ─── CSV PARSER ─── */
+function parseCSV(text, delimiter) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const errors = [], warnings = [];
+
+  if (lines.length < 2) { errors.push('CSV must have at least a header row and one data row.'); return { headers: [], rows: [], errors, warnings }; }
+
+  const skipEmpty = document.getElementById('toggle-empty').classList.contains('on');
+
+  const headers = parseLine(lines[0], delimiter);
+  if (headers.length === 0) { errors.push('Could not detect any columns. Check the delimiter setting.'); return { headers, rows: [], errors, warnings }; }
+
+  // Duplicate header check
+  const hSet = new Set();
+  headers.forEach((h, i) => {
+    if (hSet.has(h)) warnings.push(`Duplicate column name "${h}" at position ${i+1}. It will be suffixed.`);
+    hSet.add(h);
+  });
+
+  // Deduplicate
+  const seen = {};
+  const cleanHeaders = headers.map(h => {
+    if (!seen[h]) { seen[h] = 0; return h; }
+    seen[h]++; return h + '_' + seen[h];
+  });
+
+  const rows = [];
+  let inconsistentCount = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cols = parseLine(line, delimiter);
+
+    // Check consistent column count
+    if (cols.length !== cleanHeaders.length) {
+      inconsistentCount++;
+      if (inconsistentCount <= 3) warnings.push(`Row ${i+1} has ${cols.length} columns (expected ${cleanHeaders.length}). It will be padded/trimmed.`);
+    }
+
+    // Build row obj
+    const row = {};
+    cleanHeaders.forEach((h, idx) => { row[h] = cols[idx] !== undefined ? cols[idx] : ''; });
+
+    const isEmpty = cleanHeaders.every(h => row[h] === '');
+    if (skipEmpty && isEmpty) continue;
+
+    rows.push(row);
+  }
+
+  if (inconsistentCount > 3) warnings.push(`...and ${inconsistentCount - 3} more rows with inconsistent column counts.`);
+  if (rows.length === 0) errors.push('No data rows found in the CSV.');
+
+  return { headers: cleanHeaders, rows, errors, warnings };
+}
+
+function parseLine(line, delimiter) {
+  const result = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === delimiter && !inQuotes) {
+      result.push(cur.trim()); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+/* ─── AUTO DETECT TYPE ─── */
+function detectType(values) {
+  const nonEmpty = values.filter(v => v !== '' && v !== null && v !== undefined);
+  if (!nonEmpty.length) return 'null';
+
+  const numPat  = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+  const boolPat = /^(true|false|yes|no|1|0)$/i;
+  const datePat = /^\d{4}-\d{2}-\d{2}|^\d{2}[\/\-]\d{2}[\/\-]\d{4}/;
+
+  if (nonEmpty.every(v => boolPat.test(v))) return 'boolean';
+  if (nonEmpty.every(v => numPat.test(v)))  return 'number';
+  if (nonEmpty.every(v => datePat.test(v))) return 'date';
+  return 'string';
+}
+
+function castValue(val, type) {
+  if (val === '' || val === null || val === undefined) return null;
+  switch (type) {
+    case 'number':  { const n = Number(val); return isNaN(n) ? val : n; }
+    case 'boolean': return /^(true|yes|1)$/i.test(val);
+    case 'date':    return val; // keep as string, could be ISO
+    case 'null':    return null;
+    default:        return val;
+  }
+}
+
+/* ─── MAPPING TABLE ─── */
+function buildMappingTable(headers, rows) {
+  const tbody = document.getElementById('mapping-body');
+  tbody.innerHTML = '';
+
+  headers.forEach((h, idx) => {
+    const samples = rows.slice(0, 5).map(r => r[h]).filter(v => v !== '');
+    const autoType = detectType(rows.slice(0, 100).map(r => r[h]));
+
+    const tr = document.createElement('tr');
+    tr.dataset.col = h;
+    tr.innerHTML = `
+      <td class="col-include" style="text-align:center">
+        <div class="toggle on" id="inc-${idx}" onclick="this.classList.toggle('on')"></div>
+      </td>
+      <td class="col-orig">${escHtml(h)}</td>
+      <td class="col-rename">
+        <input type="text" placeholder="${escHtml(h)}" value="" data-idx="${idx}" id="rename-${idx}">
+      </td>
+      <td class="col-type">
+        <select id="type-${idx}">
+          <option value="string"  ${autoType==='string'  ?'selected':''}>String</option>
+          <option value="number"  ${autoType==='number'  ?'selected':''}>Number</option>
+          <option value="boolean" ${autoType==='boolean' ?'selected':''}>Boolean</option>
+          <option value="date"    ${autoType==='date'    ?'selected':''}>Date</option>
+          <option value="null"    ${autoType==='null'    ?'selected':''}>Null</option>
+        </select>
+      </td>
+      <td><span class="type-badge type-${autoType}">${autoType}</span></td>
+      <td class="preview-values" title="${samples.map(escHtml).join(' | ')}">${samples.slice(0,3).map(escHtml).join(', ')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ─── SELECT / DESELECT ─── */
+btnSelAll.addEventListener('click', () => {
+  document.querySelectorAll('[id^=inc-]').forEach(t => t.classList.add('on'));
+});
+btnDeselAll.addEventListener('click', () => {
+  document.querySelectorAll('[id^=inc-]').forEach(t => t.classList.remove('on'));
+});
+
+/* ─── CONVERT ─── */
+btnConvert.addEventListener('click', () => {
+  clearErrors();
+  const autoDetect = document.getElementById('toggle-types').classList.contains('on');
+  const format     = document.getElementById('output-format').value;
+  const indent     = parseInt(document.getElementById('indent').value);
+
+  const colConfig = [];
+  headers.forEach((h, idx) => {
+    const include = document.getElementById(`inc-${idx}`).classList.contains('on');
+    const rename  = document.getElementById(`rename-${idx}`).value.trim() || h;
+    const type    = document.getElementById(`type-${idx}`).value;
+    colConfig.push({ orig: h, key: rename, type, include });
+  });
+
+  const included = colConfig.filter(c => c.include);
+  if (!included.length) { showErrors(['No columns selected. Please include at least one column.']); return; }
+
+  // Build JSON data
+  const jsonArr = parsedRows.map(row => {
+    const obj = {};
+    included.forEach(cfg => {
+      obj[cfg.key] = autoDetect ? castValue(row[cfg.orig], cfg.type) : row[cfg.orig];
+    });
+    return obj;
+  });
+
+  // Format output
+  let finalOutput;
+  if (format === 'nested') {
+    const nestKey = included[0].key;
+    const nested = {};
+    jsonArr.forEach(obj => { nested[obj[nestKey]] = obj; });
+    finalOutput = nested;
+  } else if (format === 'flat') {
+    const flat = {};
+    jsonArr.forEach((obj, i) => { flat[i] = obj; });
+    finalOutput = flat;
+  } else {
+    finalOutput = jsonArr;
+  }
+
+  const indentVal = indent === 0 ? undefined : indent;
+  jsonOutput = JSON.stringify(finalOutput, null, indentVal);
+
+  // Stats
+  const byteSize = new Blob([jsonOutput]).size;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-chip"><div class="stat-val">${parsedRows.length.toLocaleString()}</div><div class="stat-lbl">Rows</div></div>
+    <div class="stat-chip"><div class="stat-val">${included.length}</div><div class="stat-lbl">Columns</div></div>
+    <div class="stat-chip"><div class="stat-val">${Array.isArray(finalOutput) ? finalOutput.length.toLocaleString() : Object.keys(finalOutput).length.toLocaleString()}</div><div class="stat-lbl">Objects</div></div>
+    <div class="stat-chip"><div class="stat-val" style="color:var(--accent2)">${formatBytes(byteSize)}</div><div class="stat-lbl">File size</div></div>
+  `;
+
+  // JSON preview
+  document.getElementById('json-preview').innerHTML = syntaxHighlight(jsonOutput.slice(0, 20000) + (jsonOutput.length > 20000 ? '\n// ... (truncated for preview)' : ''));
+
+  // Table preview
+  buildTablePreview(jsonArr.slice(0, 50), included.map(c => c.key));
+
+  document.getElementById('ready-count').textContent = `· ${parsedRows.length} records`;
+  document.getElementById('preview-section').classList.add('visible');
+  document.getElementById('preview-section').classList.add('fade-in');
+  setStep(3);
+  setTimeout(() => setStep(4), 600);
+
+  showToast('success', `✅ ${parsedRows.length} records converted to JSON!`);
+  document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+/* ─── TABLE PREVIEW ─── */
+function buildTablePreview(rows, keys) {
+  const thead = document.getElementById('table-preview-head');
+  const tbody = document.getElementById('table-preview-body');
+  thead.innerHTML = `<tr>${keys.map(k => `<th>${escHtml(k)}</th>`).join('')}</tr>`;
+  tbody.innerHTML = rows.map(row =>
+    `<tr>${keys.map(k => `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(String(row[k] ?? ''))}</td>`).join('')}</tr>`
+  ).join('');
+}
+
+/* ─── TABS ─── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ─── DOWNLOAD ─── */
+btnDownload.addEventListener('click', () => {
+  if (!jsonOutput) return;
+  const name = (document.getElementById('filename-input').value.trim() || 'output') + '.json';
+  const blob = new Blob([jsonOutput], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('success', `📥 Downloaded: ${name}`);
+});
+
+/* ─── COPY ─── */
+btnCopy.addEventListener('click', () => {
+  if (!jsonOutput) return;
+  navigator.clipboard.writeText(jsonOutput).then(() => {
+    showToast('success', '📋 JSON copied to clipboard!');
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = jsonOutput;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('success', '📋 JSON copied to clipboard!');
+  });
+});
+
+/* ─── RESET ─── */
+btnReset.addEventListener('click', () => {
+  parsedRows = []; headers = []; jsonOutput = '';
+  document.getElementById('drop-default').style.display = 'block';
+  document.getElementById('file-info').style.display = 'none';
+  fileInput.value = '';
+  btnParse.disabled = true;
+  btnParse.style.display = 'inline-flex';
+  btnReset.style.display = 'none';
+  document.getElementById('mapping-section').classList.remove('visible');
+  document.getElementById('preview-section').classList.remove('visible');
+  clearErrors();
+  setStep(1);
+  btnParse._file = null;
+});
+
+/* ─── STEPS ─── */
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+}
+
+/* ─── ERRORS / WARNINGS ─── */
+function showErrors(errs) {
+  const box = document.getElementById('error-box');
+  const list = document.getElementById('error-list');
+  box.style.display = 'block';
+  list.innerHTML = errs.map(e => `<li>${escHtml(e)}</li>`).join('');
+}
+function showWarnings(warns) {
+  const box = document.getElementById('warning-box');
+  box.style.display = 'block';
+  box.innerHTML = '⚠️ <strong>Warnings:</strong> ' + warns.map(w => escHtml(w)).join(' &nbsp;|&nbsp; ');
+}
+function clearErrors() {
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('warning-box').style.display = 'none';
+}
+
+/* ─── TOAST ─── */
+function showToast(type, msg) {
+  const t = document.getElementById('toast');
+  t.className = 'show ' + type;
+  t.textContent = msg;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ─── SYNTAX HIGHLIGHT ─── */
+function syntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+    if (/^"/.test(match)) {
+      return match.endsWith(':')
+        ? `<span class="json-key">${match}</span>`
+        : `<span class="json-string">${match}</span>`;
+    }
+    if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+    if (/null/.test(match))       return `<span class="json-null">${match}</span>`;
+    return `<span class="json-number">${match}</span>`;
+  });
+}
+
+/* ─── UTILS ─── */
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+</script>
+</body>
+</html>
